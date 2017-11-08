@@ -76,7 +76,7 @@
 <meta property="og:site_name" content="aBenVip">
 <meta property="og:description" content="一、加密介绍 &amp;emsp;&amp;emsp;本文采用对称式加密算法DES和非对称式加密算法RSA结合做数据传输加密的方式。&amp;emsp;&amp;emsp;先说一下对称式加密 DES:对称式加密即使用单钥密码加密的方法，信息的加密和解密使用同一个秘钥，这种方式也称为单秘钥加密。所谓对称就是指加密和解密使用的是同一个秘钥！&amp;emsp;&amp;emsp;常用的对称加密有：DES、IDEA、RC2、RC4、SKIPJACK、">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-11-08T03:23:27.190Z">
+<meta property="og:updated_time" content="2017-11-08T03:33:55.672Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android端与JavaWeb传输加密（DES+RSA）">
 <meta name="twitter:description" content="一、加密介绍 &amp;emsp;&amp;emsp;本文采用对称式加密算法DES和非对称式加密算法RSA结合做数据传输加密的方式。&amp;emsp;&amp;emsp;先说一下对称式加密 DES:对称式加密即使用单钥密码加密的方法，信息的加密和解密使用同一个秘钥，这种方式也称为单秘钥加密。所谓对称就是指加密和解密使用的是同一个秘钥！&amp;emsp;&amp;emsp;常用的对称加密有：DES、IDEA、RC2、RC4、SKIPJACK、">
@@ -300,7 +300,7 @@
 
       
         <h2 id="一、加密介绍"><a href="#一、加密介绍" class="headerlink" title="一、加密介绍"></a>一、加密介绍</h2><hr>
-<p>&emsp;&emsp;本文采用对称式加密算法DES和非对称式加密算法RSA结合做数据传输加密的方式。<br>&emsp;&emsp;先说一下对称式加密 DES:对称式加密即使用单钥密码加密的方法，信息的加密和解密使用同一个秘钥，这种方式也称为单秘钥加密。所谓对称就是指加密和解密使用的是同一个秘钥！<br>&emsp;&emsp;常用的对称加密有：DES、IDEA、RC2、RC4、SKIPJACK、RC5、AES算法等。<br>&emsp;&emsp;与对称加密算法不同，非对称加密算法需要两个密钥：公开密钥（publickey）和私有密钥 （privatekey）。公开密钥与私有密钥是一对，如果用公开密钥对数据进行加密，只有用对应的私有密钥才能解密；如果用私有密钥对数据进行加密，那么只有用对应的公开密钥才能解密。因为加密和解密使用的是两个不同的密钥，所以这种算法叫作非对称加密算法。<br>&emsp;&emsp;RSA 公钥加密算法是1977年由Ron Rivest、Adi Shamirh和LenAdleman在（美国麻省理工学院）开发的。RSA取名来自开发他们三者的名字。RSA是目前最有影响力的公钥加密算法，它能够抵抗到目前为止已知的所有密码攻击，已被ISO推荐为公钥数据加密标准。    RSA算法基于一个十分简单的数论事实：将两个大素数相乘十分容易，但那时想要对其乘积进行因式分解却极其困难，因此可以将乘积公开作为加密密钥。</p>
+<p>&emsp;&emsp;本文采用对称式加密算法DES和非对称式加密算法RSA结合做数据传输加密的方式。<br>&emsp;&emsp;先说一下对称式加密 DES:对称式加密即使用单钥密码加密的方法，信息的加密和解密使用同一个秘钥，这种方式也称为单秘钥加密。所谓对称就是指加密和解密使用的是同一个秘钥！<br>&emsp;&emsp;常用的对称加密有：DES、IDEA、RC2、RC4、SKIPJACK、RC5、AES算法等。<br>&emsp;&emsp;与对称加密算法不同，非对称加密算法需要两个密钥：公开密钥（publickey）和私有密钥 （privatekey）。公开密钥与私有密钥是一对，如果用公开密钥对数据进行加密，只有用对应的私有密钥才能解密；如果用私有密钥对数据进行加密，那么只有用对应的公开密钥才能解密。因为加密和解密使用的是两个不同的密钥，所以这种算法叫作非对称加密算法。<br><a id="more"></a><br>&emsp;&emsp;RSA 公钥加密算法是1977年由Ron Rivest、Adi Shamirh和LenAdleman在（美国麻省理工学院）开发的。RSA取名来自开发他们三者的名字。RSA是目前最有影响力的公钥加密算法，它能够抵抗到目前为止已知的所有密码攻击，已被ISO推荐为公钥数据加密标准。    RSA算法基于一个十分简单的数论事实：将两个大素数相乘十分容易，但那时想要对其乘积进行因式分解却极其困难，因此可以将乘积公开作为加密密钥。</p>
 <hr>
 <h2 id="二、RSA密钥生成"><a href="#二、RSA密钥生成" class="headerlink" title="二、ＲＳＡ密钥生成"></a>二、ＲＳＡ密钥生成</h2><hr>
 <p>&emsp;&emsp;RSA密钥采用OpenSSL协议进行生成，本文仅简单生成公钥和私钥，如有其它需要可以通过ＣＡ证书进行密钥的生成</p>
