@@ -248,7 +248,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/11/03/aa/" itemprop="url">aa</a></h1>
+                <a class="post-title-link" href="/2017/11/03/aa/" itemprop="url">Android端与JavaWeb传输加密（DES+RSA）</a></h1>
         
 
         <div class="post-meta">
@@ -300,7 +300,571 @@
       
         
           
-            
+            <h2 id="一、加密介绍"><a href="#一、加密介绍" class="headerlink" title="一、加密介绍"></a>一、加密介绍</h2><hr>
+<p>&emsp;&emsp;本文采用对称式加密算法DES和非对称式加密算法RSA结合做数据传输加密的方式。<br>&emsp;&emsp;先说一下对称式加密 DES:对称式加密即使用单钥密码加密的方法，信息的加密和解密使用同一个秘钥，这种方式也称为单秘钥加密。所谓对称就是指加密和解密使用的是同一个秘钥！<br>&emsp;&emsp;常用的对称加密有：DES、IDEA、RC2、RC4、SKIPJACK、RC5、AES算法等。<br>&emsp;&emsp;与对称加密算法不同，非对称加密算法需要两个密钥：公开密钥（publickey）和私有密钥 （privatekey）。公开密钥与私有密钥是一对，如果用公开密钥对数据进行加密，只有用对应的私有密钥才能解密；如果用私有密钥对数据进行加密，那么只有用对应的公开密钥才能解密。因为加密和解密使用的是两个不同的密钥，所以这种算法叫作非对称加密算法。<br>&emsp;&emsp;RSA 公钥加密算法是1977年由Ron Rivest、Adi Shamirh和LenAdleman在（美国麻省理工学院）开发的。RSA取名来自开发他们三者的名字。RSA是目前最有影响力的公钥加密算法，它能够抵抗到目前为止已知的所有密码攻击，已被ISO推荐为公钥数据加密标准。    RSA算法基于一个十分简单的数论事实：将两个大素数相乘十分容易，但那时想要对其乘积进行因式分解却极其困难，因此可以将乘积公开作为加密密钥。</p>
+<hr>
+<h2 id="二、RSA密钥生成"><a href="#二、RSA密钥生成" class="headerlink" title="二、ＲＳＡ密钥生成"></a>二、ＲＳＡ密钥生成</h2><hr>
+<p>&emsp;&emsp;RSA密钥采用OpenSSL协议进行生成，本文仅简单生成公钥和私钥，如有其它需要可以通过ＣＡ证书进行密钥的生成</p>
+<h3 id="１、OpenSSL安装"><a href="#１、OpenSSL安装" class="headerlink" title="１、OpenSSL安装"></a>１、OpenSSL安装</h3><blockquote>
+<p>　<a href="http://slproweb.com/products/Win32OpenSSL.html" target="_blank" rel="external">http://slproweb.com/products/Win32OpenSSL.html</a><br>　请自行选择32位64位进行下载安装</p>
+</blockquote>
+<h3 id="２、打开工作空间"><a href="#２、打开工作空间" class="headerlink" title="２、打开工作空间　"></a>２、打开工作空间　</h3><p>&emsp;&emsp;打开OpenSSL安装目录下的bin，运行OpenSSL.exe进入OpenSSL工作空间</p>
+<h3 id="３、密钥生成"><a href="#３、密钥生成" class="headerlink" title="３、密钥生成"></a>３、密钥生成</h3><h4 id="①、私钥生成（生成位置位于bin目录下）"><a href="#①、私钥生成（生成位置位于bin目录下）" class="headerlink" title="①、私钥生成（生成位置位于bin目录下）"></a>①、私钥生成（生成位置位于bin目录下）</h4><blockquote>
+<p>　genrsa -out rsa_private_key.pem 1024 </p>
+</blockquote>
+<p>&emsp;&emsp;openssl随机生成了一份私钥，加密长度是1024位。加密长度是指理论上最大允许”被加密的信息“长度的限制，也就是明文的长度限制。随着这个参数的增大（比方说2048），允许的明文长度也会增加，但同时也会造成计算复杂度的极速增长。一般推荐的长度就是1024位（128字节）<br>JAVA需要使用的私钥需要经过PKCS#8编码，PHP程序不需要<br>&emsp;&emsp;当前私钥格式需要转换为pkcs#8的格式，命令为：</p>
+<blockquote>
+<p>　pkcs8 -topk8 -inform PEM -in pkcs8_rsa_private_key.pem -outform PEM -nocrypt</p>
+</blockquote>
+<h4 id="②、公钥生成"><a href="#②、公钥生成" class="headerlink" title="②、公钥生成"></a>②、公钥生成</h4><blockquote>
+<p>　rsa -in rsa_private_key.pem -out rsa_public_key.pem -pubout</p>
+</blockquote>
+<p>至此，RSA+DES相关前期准备工作完成</p>
+<hr>
+<hr>
+<h2 id="三、Android端配置"><a href="#三、Android端配置" class="headerlink" title="三、Android端配置　"></a>三、Android端配置　</h2><p>&emsp;&emsp;本文主要针对数据传输过程进行加密，采取加密Json字符串完成整个加密过程，由此，需要统一传输参数为”data=<strong><em>**</em></strong>&amp;sign=”<strong><strong><strong><strong><em>*</em></strong></strong></strong></strong>“的格式，如有其它需求请自行更改。<br>&emsp;&emsp;由于本项目网络框架采用Retrofit+OkHttp的实现方式，所以对参数进行加密的过程由OkHttp拦截器来实现</p>
+<pre><code>public class EncryptionInterceptor implements Interceptor {
+
+private Context mContext;
+
+public EncryptionInterceptor(Context context) {
+    this.mContext = context;
+}
+
+@Override
+public Response intercept(@NonNull Chain chain) throws IOException {
+    Request request = chain.request();
+    RequestBody oldBody = request.body();
+    Buffer buffer = new Buffer();
+    if (oldBody != null) {
+        oldBody.writeTo(buffer);
+    }
+    String strOldBody = buffer.readUtf8();
+    Map&lt;String, String&gt; map = new HashMap&lt;&gt;();
+    String dataByte = URLDecoder.decode(strOldBody.substring(5), &quot;utf-8&quot;);
+    try {
+        //获取DES的key
+        byte[] desKey = DESCoder.initKey();
+        //DES加密数据
+        byte[] encrypt = DESCoder.encrypt(dataByte.getBytes(), desKey);
+        map.put(&quot;data&quot;, parseByte2HexStr(encrypt));
+        //RSA加密
+        RSAEncrypt rsaEncrypt = new RSAEncrypt();
+        InputStream inputStream =     mContext.getResources().getAssets().open(&quot;rsa_public_key.pem&quot;);
+        //rsa设置公钥
+        rsaEncrypt.loadPublicKey(inputStream);
+        //rsa加密DES的key
+        byte[] rsaData = rsaEncrypt.encrypt(rsaEncrypt.getPublicKey(), desKey);
+        map.put(&quot;sign&quot;, parseByte2HexStr(rsaData));
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    FormBody body = new FormBody.Builder().add(&quot;data&quot;, map.get(&quot;data&quot;)).add(&quot;sign&quot;, map.get(&quot;sign&quot;)).build();
+    request = request.newBuilder().header(&quot;Content-Type&quot;, body.contentType().type()).header(&quot;Content-Length&quot;, String.valueOf(body.contentLength())).method(request.method(), body).build();
+    return chain.proceed(request);
+}
+
+/**
+ * 将二进制转换成16进制
+ *
+ * @since v1.0
+ */
+private static String parseByte2HexStr(byte buf[]) {
+    StringBuilder sb = new StringBuilder();
+    for (byte aBuf : buf) {
+        String hex = Integer.toHexString(aBuf &amp; 0xFF);
+        if (hex.length() == 1) {
+            hex = &apos;0&apos; + hex;
+        }
+        sb.append(hex.toUpperCase());
+    }
+    return sb.toString();
+}
+
+/**
+ * 按照key排序得到参数列表字符串
+ *
+ * @param paramValues 参数map对象
+ * @return 参数列表字符串
+ */
+public static String getParamsOrderByKey(Map&lt;String, String&gt; paramValues) {
+    String params = &quot;&quot;;
+    List&lt;String&gt; paramNames = new ArrayList&lt;&gt;(paramValues.size());
+    paramNames.addAll(paramValues.keySet());
+    Collections.sort(paramNames);
+    for (String paramName : paramNames) {
+
+        if (params.equals(&quot;&quot;)) {
+            params += paramName + &quot;=&quot; + paramValues.get(paramName);
+        } else {
+            params += &quot;&amp;&quot; + paramName + &quot;=&quot; + paramValues.get(paramName);
+        }
+    }
+
+    return params;
+}
+
+/**
+ * 将16进制转换为二进制
+ *
+ * @since v1.0
+ */
+public byte[] parseHexStr2Byte(String hexStr) {
+    if (hexStr.length() &lt; 1)
+        return null;
+    byte[] result = new byte[hexStr.length() / 2];
+    for (int i = 0; i &lt; hexStr.length() / 2; i++) {
+        int high = Integer.parseInt(hexStr.substring(i * 2, i * 2 + 1), 16);
+        int low = Integer.parseInt(hexStr.substring(i * 2 + 1, i * 2 + 2), 16);
+        result[i] = (byte) (high * 16 + low);
+    }
+    return result;
+}
+
+}
+</code></pre><p><strong>添加OkHttp拦截器</strong></p>
+<pre><code>new OkHttpClient.Builder()
+                .addInterceptor(new EncryptionInterceptor(this))
+                .build();
+</code></pre><p><strong>RSA工具类实现</strong></p>
+<pre><code>public class RSAEncrypt {
+public static final String DEFAULT_PUBLIC_KEY =
+        &quot;MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC1Qcf1zVOuhseFxvo6+FnVvEPs&quot; + &quot;\r&quot; + &quot;Uvczg6oX+HjMNksiiDWcNkbPHfznaPDtgoBY2xF0R8HGHbrT53LNvkj7UMcI48tq&quot; + &quot;\r&quot; + &quot;K+B4YdJHe9SgJVDCCiceLLGtf/ev206qJ/XgKgrLFD+vMmjIB8gQCkZvy/dxhEf1&quot; + &quot;\r&quot; + &quot;aAmoz5tdJhOVdxT7QwIDAQAB&quot; + &quot;\r&quot;;
+
+public static final String DEFAULT_PRIVATE_KEY =
+        &quot;MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALVBx/XNU66Gx4XG&quot; + &quot;\r&quot; +
+                &quot;+jr4WdW8Q+xS9zODqhf4eMw2SyKINZw2Rs8d/Odo8O2CgFjbEXRHwcYdutPncs2+&quot; + &quot;\r&quot; +
+                &quot;SPtQxwjjy2or4Hhh0kd71KAlUMIKJx4ssa1/96/bTqon9eAqCssUP68yaMgHyBAK&quot; + &quot;\r&quot; +
+                &quot;Rm/L93GER/VoCajPm10mE5V3FPtDAgMBAAECgYAf1hEAHHNhSS0MUzmqV+q3ftzT&quot; + &quot;\r&quot; +
+                &quot;SnM+6hZbJXpaLAMgapo3+NSRFmxQXP9MSEqw0LGNIfloCdrB03o3pv98nOCIZCh7&quot; + &quot;\r&quot; +
+                &quot;PHsU2GhxJ04Qro+wKhK358326KNXCjjqVIBG0xMbJxVhjM2/jjfocxFpe5iD7h53&quot; + &quot;\r&quot; +
+                &quot;c+GvDgUVduAYO4I1GQJBAO21n2aIzQV3mScS1O8BRV+9CmHaDbVHqBetRoB3kJ2U&quot; + &quot;\r&quot; +
+                &quot;piflKTNofwWmTA5A8sKt8WcOz7LsB2SWcp9jNvatxA8CQQDDNCmfo6eix9e5f11K&quot; + &quot;\r&quot; +
+                &quot;Rf8sRiN7XGDzlKkZlmQAN0UtXdTP4AN9cuZrwnntWKysXr/zLntYLGYn9rdrohbD&quot; + &quot;\r&quot; +
+                &quot;9RGNAkBOEsog7iuQcSCfQcMoIN29PSSs0OaRtNBTvniadyrLZuhP0CeBGAAoRd9T&quot; + &quot;\r&quot; +
+                &quot;CyfwoxrXg3jaRkWDVxqcmQSTbq0nAkB8flcRhilSqsuNdYpE5VFxpiXY9jirAKO8&quot; + &quot;\r&quot; +
+                &quot;Our6LEXFQjOIhCEVr+L+1OA4HDa8FA2thXaK7H4WfMXMMmr8fN69AkEAuR0YU9My&quot; + &quot;\r&quot; +
+                &quot;snzWLDWYR5sNp90PhyDSL/HTZHBnebD+JlAYwoYRFYt+tXw0/PEmV2B3thYGPeiZ&quot; + &quot;\r&quot; +
+                &quot;kHKd/TeLIVbxGg==&quot; + &quot;\r&quot;;
+
+/**
+ * 私钥
+ */
+private RSAPrivateKey privateKey;
+
+/**
+ * 公钥
+ */
+private RSAPublicKey publicKey;
+
+/**
+ * 字节数据转字符串专用集合
+ */
+private static final char[] HEX_CHAR = {&apos;0&apos;, &apos;1&apos;, &apos;2&apos;, &apos;3&apos;, &apos;4&apos;, &apos;5&apos;, &apos;6&apos;, &apos;7&apos;, &apos;8&apos;, &apos;9&apos;, &apos;a&apos;, &apos;b&apos;, &apos;c&apos;, &apos;d&apos;, &apos;e&apos;, &apos;f&apos;};
+
+
+/**
+ * 获取私钥
+ *
+ * @return 当前的私钥对象
+ */
+public RSAPrivateKey getPrivateKey() {
+    return privateKey;
+}
+
+/**
+ * 获取公钥
+ *
+ * @return 当前的公钥对象
+ */
+public RSAPublicKey getPublicKey() {
+    return publicKey;
+}
+
+/**
+ * 随机生成密钥对
+ */
+public void genKeyPair() {
+    KeyPairGenerator keyPairGen = null;
+    try {
+        keyPairGen = KeyPairGenerator.getInstance(&quot;RSA&quot;);
+    } catch (NoSuchAlgorithmException e) {
+        e.printStackTrace();
+    }
+    keyPairGen.initialize(1024, new SecureRandom());
+    KeyPair keyPair = keyPairGen.generateKeyPair();
+    this.privateKey = (RSAPrivateKey) keyPair.getPrivate();
+    this.publicKey = (RSAPublicKey) keyPair.getPublic();
+}
+
+/**
+ * 从文件中输入流中加载公钥
+ *
+ * @param in 公钥输入流
+ * @throws Exception 加载公钥时产生的异常
+ */
+public void loadPublicKey(InputStream in) throws Exception {
+    try {
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        String readLine = null;
+        StringBuilder sb = new StringBuilder();
+        while ((readLine = br.readLine()) != null) {
+            if (readLine.charAt(0) == &apos;-&apos;) {
+                continue;
+            } else {
+                sb.append(readLine);
+                sb.append(&apos;\r&apos;);
+            }
+        }
+        loadPublicKey(sb.toString());
+    } catch (IOException e) {
+        throw new Exception(&quot;公钥数据流读取错误&quot;);
+    } catch (NullPointerException e) {
+        throw new Exception(&quot;公钥输入流为空&quot;);
+    }
+}
+
+
+/**
+ * 从字符串中加载公钥
+ *
+ * @param publicKeyStr 公钥数据字符串
+ * @throws Exception 加载公钥时产生的异常
+ */
+public void loadPublicKey(String publicKeyStr) throws Exception {
+    try {
+    // byte[] buffer = Base64.decode(publicKeyStr.getBytes(), Base64.DEFAULT);
+        BASE64Decoder base64Decoder= new BASE64Decoder();
+        byte[] buffer= base64Decoder.decodeBuffer(publicKeyStr);
+        KeyFactory keyFactory = KeyFactory.getInstance(&quot;RSA&quot;);
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(buffer);
+        this.publicKey = (RSAPublicKey) keyFactory.generatePublic(keySpec);
+    } catch (NoSuchAlgorithmException e) {
+        throw new Exception(&quot;无此算法&quot;);
+    } catch (InvalidKeySpecException e) {
+        throw new Exception(&quot;公钥非法&quot;);
+    } catch (NullPointerException e) {
+        throw new Exception(&quot;公钥数据为空&quot;);
+    }
+}
+
+/**
+ * 从文件中加载私钥
+ *
+ * @return 是否成功
+ * @throws Exception
+ */
+public void loadPrivateKey(InputStream in) throws Exception {
+    try {
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        String readLine = null;
+        StringBuilder sb = new StringBuilder();
+        while ((readLine = br.readLine()) != null) {
+            if (readLine.charAt(0) == &apos;-&apos;) {
+                continue;
+            } else {
+                sb.append(readLine);
+                sb.append(&apos;\r&apos;);
+            }
+        }
+        loadPrivateKey(sb.toString());
+    } catch (IOException e) {
+        throw new Exception(&quot;私钥数据读取错误&quot;);
+    } catch (NullPointerException e) {
+        throw new Exception(&quot;私钥输入流为空&quot;);
+    }
+}
+
+public void loadPrivateKey(String privateKeyStr) throws Exception {
+    try {
+        //byte[] buffer = Base64.encode(privateKeyStr.getBytes(), Base64.DEFAULT);
+        BASE64Decoder base64Decoder= new BASE64Decoder();
+        byte[] buffer= base64Decoder.decodeBuffer(privateKeyStr);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(buffer);
+        KeyFactory keyFactory = KeyFactory.getInstance(&quot;RSA&quot;);
+        this.privateKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
+    } catch (NoSuchAlgorithmException e) {
+        throw new Exception(&quot;无此算法&quot;);
+    } catch (InvalidKeySpecException e) {
+        throw new Exception(&quot;私钥非法&quot;);
+    } catch (NullPointerException e) {
+        throw new Exception(&quot;私钥数据为空&quot;);
+    }
+}
+
+/**
+ * 加密过程
+ *
+ * @param publicKey     公钥
+ * @param plainTextData 明文数据
+ * @return
+ * @throws Exception 加密过程中的异常信息
+ */
+public byte[] encrypt(RSAPublicKey publicKey, byte[] plainTextData) throws Exception {
+    if (publicKey == null) {
+        throw new Exception(&quot;加密公钥为空, 请设置&quot;);
+    }
+    Cipher cipher = null;
+    try {
+
+        cipher = Cipher.getInstance(&quot;RSA&quot;);
+        //Android端无需添加此加密提供者，已默认实现
+        //cipher = Cipher.getInstance(&quot;RSA&quot;, new BouncyCastleProvider());
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        return cipher.doFinal(plainTextData);
+    } catch (NoSuchAlgorithmException e) {
+        throw new Exception(&quot;无此加密算法&quot;);
+    } catch (NoSuchPaddingException e) {
+        e.printStackTrace();
+        return null;
+    } catch (InvalidKeyException e) {
+        throw new Exception(&quot;加密公钥非法,请检查&quot;);
+    } catch (IllegalBlockSizeException e) {
+        throw new Exception(&quot;明文长度非法&quot;);
+    } catch (BadPaddingException e) {
+        throw new Exception(&quot;明文数据已损坏&quot;);
+    }
+}
+
+/**
+ * 解密过程
+ *
+ * @param privateKey 私钥
+ * @param cipherData 密文数据
+ * @return 明文
+ * @throws Exception 解密过程中的异常信息
+ */
+public byte[] decrypt(RSAPrivateKey privateKey, byte[] cipherData) throws Exception {
+    if (privateKey == null) {
+        throw new Exception(&quot;解密私钥为空, 请设置&quot;);
+    }
+    Cipher cipher = null;
+    try {
+        cipher = Cipher.getInstance(&quot;RSA&quot;);
+        //Android端无需添加此加密提供者，已默认实现
+        //cipher = Cipher.getInstance(&quot;RSA&quot;, new BouncyCastleProvider());
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] output = cipher.doFinal(cipherData);
+        return output;
+    } catch (NoSuchAlgorithmException e) {
+        throw new Exception(&quot;无此解密算法&quot;);
+    } catch (NoSuchPaddingException e) {
+        e.printStackTrace();
+        return null;
+    } catch (InvalidKeyException e) {
+        throw new Exception(&quot;解密私钥非法,请检查&quot;);
+    } catch (IllegalBlockSizeException e) {
+        throw new Exception(&quot;密文长度非法&quot;);
+    } catch (BadPaddingException e) {
+        throw new Exception(&quot;密文数据已损坏&quot;);
+    }
+}
+
+
+/**
+ * 字节数据转十六进制字符串
+ *
+ * @param data 输入数据
+ * @return 十六进制内容
+ */
+public static String byteArrayToString(byte[] data) {
+    StringBuilder stringBuilder = new StringBuilder();
+    for (int i = 0; i &lt; data.length; i++) {
+        //取出字节的高四位 作为索引得到相应的十六进制标识符 注意无符号右移  
+        stringBuilder.append(HEX_CHAR[(data[i] &amp; 0xf0) &gt;&gt;&gt; 4]);
+        //取出字节的低四位 作为索引得到相应的十六进制标识符  
+        stringBuilder.append(HEX_CHAR[(data[i] &amp; 0x0f)]);
+        if (i &lt; data.length - 1) {
+            stringBuilder.append(&apos; &apos;);
+        }
+    }
+    return stringBuilder.toString();
+}
+
+
+public static void main(String[] args) {
+    RSAEncrypt rsaEncrypt = new RSAEncrypt();
+
+    //加载公钥
+    try {
+        rsaEncrypt.loadPublicKey(RSAEncrypt.DEFAULT_PUBLIC_KEY);
+        System.out.println(&quot;加载公钥成功&quot;);
+    } catch (Exception e) {
+        System.err.println(e.getMessage());
+        System.err.println(&quot;加载公钥失败&quot;);
+    }
+    /*try {
+        rsaEncrypt.loadPublicKey(RSAEncrypt.DEFAULT_PUBLIC_KEY);
+        System.out.println(&quot;加载公钥成功&quot;);
+    } catch (Exception e) {
+        System.err.println(e.getMessage());
+        System.err.println(&quot;加载公钥失败&quot;);
+    }
+    //加载私钥
+    try {
+        rsaEncrypt.loadPrivateKey(RSAEncrypt.DEFAULT_PRIVATE_KEY);
+        System.out.println(&quot;加载私钥成功&quot;);
+    } catch (Exception e) {
+        System.err.println(e.getMessage());
+        System.err.println(&quot;加载私钥失败&quot;);
+    }
+    try {
+        SecureRandom sr = new SecureRandom();
+        KeyGenerator kg = KeyGenerator.getInstance(&quot;DES&quot;);
+        kg.init(56, sr);
+        SecretKey generateKey = kg.generateKey();
+        String encodeHexString = Hex.toHexString(generateKey.getEncoded());
+        System.out.println(encodeHexString);
+    } catch (NoSuchAlgorithmException e) {
+        e.printStackTrace();
+    }
+    //测试字符串
+    String encryptStr= &quot;Test String chaijunkun&quot;;
+
+    try {
+        //加密
+        long encryptStart = System.currentTimeMillis();
+        byte[] cipher = rsaEncrypt.encrypt(rsaEncrypt.getPublicKey(), encryptStr.getBytes());
+        long encryptEnd = System.currentTimeMillis();
+        System.out.println(&quot;密文长度:&quot;+ cipher.length);
+        System.out.println(RSAEncrypt.byteArrayToString(cipher));
+        System.out.println(&quot;加密时间&quot;+ (encryptEnd-encryptStart));
+
+        //解密
+        long decryptStart = System.currentTimeMillis();
+        byte[] plainText = rsaEncrypt.decrypt(rsaEncrypt.getPrivateKey(), cipher);
+        long decryptEnd = System.currentTimeMillis();
+        System.out.println(&quot;明文长度:&quot;+ plainText.length);
+        System.out.println(RSAEncrypt.byteArrayToString(plainText));
+        System.out.println(&quot;解密时间&quot;+ (decryptEnd-decryptStart));
+
+        System.out.println(new String(plainText));
+    } catch (Exception e) {
+        System.err.println(e.getMessage());
+    }*/ 
+        }
+}  
+</code></pre><p><strong>DES工具类实现</strong></p>
+<pre><code>public class DESCoder {
+/**
+ * 密钥算法
+ * java 7只支持56位密钥
+ * Bouncy Castle 支持64位密钥
+ */
+public static final String KEY_ALGORITHM = &quot;DES&quot;;
+/**
+ * 加密/解密算法 /工作模式/填充方式
+ */
+public static final String CIPHER_ALGORITHM = &quot;DES/ECB/PKCS5Padding&quot;;
+/**
+ * 转换密钥
+ * @param key 二进制密钥
+ * @return key 密钥
+ * @throws Exception
+ */
+private static Key toKey(byte[] key) throws Exception{
+    //实例化DES密钥材料
+    DESKeySpec dks = new DESKeySpec(key);
+    //实例化密钥工厂
+    SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KEY_ALGORITHM);
+    //生产密钥
+    SecretKey secretKey = keyFactory.generateSecret(dks);
+    return secretKey;
+}
+/**
+ * 解密
+ * @param data 待解密数据
+ * @param key 密钥
+ * @return byte[] 解密数据
+ * @throws Exception
+ */
+public static byte[] decrypt(byte[] data,byte[] key) throws Exception{
+    //还原密钥
+    Key k = toKey(key);
+    //实例化 
+    Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+    //初始化，设置为解密模式
+    cipher.init(Cipher.DECRYPT_MODE, k);
+    //执行操作
+    return cipher.doFinal(data);
+}
+/**
+ * 加密
+ * @param data 待加密数据
+ * @param key 密钥
+ * @return byte[] 加密数据
+ * @throws Exception
+ */
+public static byte[] encrypt(byte[] data,byte[] key) throws Exception{
+    //还原密钥
+    Key k = toKey(key);
+    //实例化
+    Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM,new BouncyCastleProvider());
+    //初始化，设置为加密模式
+    cipher.init(Cipher.ENCRYPT_MODE,k);
+    //执行操作
+    return cipher.doFinal(data);
+}
+/**
+ * 生产密钥
+ * java 7只支持56位 密钥
+ * Bouncy Castle 支持64位密钥
+ * @return byte[] 二进制密钥
+ * @throws Exception
+ */
+public static byte[] initKey() throws Exception{
+    /*
+     * 实例化密钥生成器
+     * 若要使用64位密钥注意替换
+     * 讲下述代码中的
+     * KeyGenerator.getInstance(KEY_ALGORITHM);
+     * 替换为
+     * KeyGenerator.getInstance(KEY_ALGORITHM，&quot;BC&quot;);
+     */
+    KeyGenerator kg = KeyGenerator.getInstance(KEY_ALGORITHM,new BouncyCastleProvider());
+
+    kg.init(64);
+    //生成密钥
+    SecretKey secretKey = kg.generateKey();
+    //获得密钥的二进制编码形式
+    return secretKey.getEncoded();
+}
+}
+</code></pre><h2 id="四、JavaWeb端配置"><a href="#四、JavaWeb端配置" class="headerlink" title="四、JavaWeb端配置　"></a>四、JavaWeb端配置　</h2><p>&emsp;&emsp;Web后端只需要在Controller中添加以下代码，接受服务端传递的data和sign，并完成接收的Json字符串转换为实体类即可</p>
+<pre><code>/**
+ * 解密所需数据
+ *
+ * @param data 接受客户端上传的Json格式的数据
+ * @param sign 接受客户端上传的解密数据的key值
+ */
+public &lt;T&gt; T convertJson(String data, String sign,Class&lt;T&gt; clazz) {
+    System.out.println(data);
+    System.out.println(sign);
+    T tClass = null;
+    try {
+        //rsa加密
+        RSAEncrypt rsaEncrypt = new RSAEncrypt();
+        //加载rsa私钥
+        InputStream in = new FileInputStream(new File(&quot;C:\\OpenSSL-Win64\\bin\\pkcs8_rsa_private_key.pem&quot;));
+        rsaEncrypt.loadPrivateKey(in);
+        //获取RSA加密的key的数据，并把该16进制的sign转成byte[],(客户端采用将byte[]转成16进制进行数据上传)
+        byte[] keyBytes = parseHexStr2Byte(sign);
+        //通过RSA解密DES的key值
+        byte[] rsaKey = rsaEncrypt.decrypt(rsaEncrypt.getPrivateKey(), keyBytes);
+
+        //通过DES的key值解密需要的json数据
+        byte[] desData = DESCoder.decrypt(parseHexStr2Byte(data), rsaKey);
+        System.out.println(Arrays.toString(desData));
+        System.out.println(new String(desData));
+        tClass = JSON.parseObject(new String(desData), clazz);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return tClass;
+}
+</code></pre><h2 id="五、备注"><a href="#五、备注" class="headerlink" title="五、备注"></a>五、备注</h2><p>&emsp;&emsp;后续会上传相关Demo到Github，欢迎Star<br>&emsp;&emsp;<a href="https://github.com/aBenVip" target="_blank" rel="external">GitHub</a><br>&emsp;&emsp;该文章仅供学习交流所用，转载须注明出处</p>
+
           
         
       
