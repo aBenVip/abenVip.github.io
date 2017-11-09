@@ -299,35 +299,15 @@
 
       
         
-          
-            <p>#Architecture Component</p>
-<p>##一、简介</p>
-<p>##二、添加Component到你的Project</p>
-<p>###1、在Project目录下build.gradle中进行以下配置<br>    allprojects {<br>        repositories {<br>            jcenter()<br>            //AS3.0以后，用google()代替”maven { url ‘<a href="https://maven.google.com" target="_blank" rel="external">https://maven.google.com</a>‘ }”<br>            google()<br>            //maven { url ‘<a href="https://maven.google.com" target="_blank" rel="external">https://maven.google.com</a>‘ }<br>         }<br>     }</p>
-<p>###2、在app目录下build.gradle中进行以下配置</p>
-<p>####①：Lifecycles生命周期管理配置</p>
-<p>（默认依赖方式为implementation，如使用Gradle3.3环境下，自行更改为compile）</p>
-<pre><code>//当添加lifecycle:extensions或者lifecycle:common-java8时，会默认添加该依赖，无需重复添加
-implementation &quot;android.arch.lifecycle:runtime:1.0.3&quot;
-
-//当使用lifecycle:common-java8中的DefaultLifecycleObserver功能，不需要添加此APT
-annotationProcessor &quot;android.arch.lifecycle:compiler:1.0.0&quot;
-
-//当使用Lifecycles支持Java8语言，需添加该依赖
-implementation &quot;android.arch.lifecycle:common-java8:1.0.0&quot;
-</code></pre><p>####②：LiveData和ViewModel配置</p>
-<pre><code>//默认添加
-implementation &quot;android.arch.lifecycle:extensions:1.0.0&quot;
-
-//支持在test工程中使用LiveData
-testImplementation &quot;android.arch.core:core-testing:1.0.0&quot;
-
-//当使用ReactiveStreams的相关Api需添加该依赖，默认添加lifecycle:extensions
-//采用RxJava中的Publisher和Subscriber进行观察和订阅，提供Publisher和LiveData的互相转化
-implementation &quot;android.arch.lifecycle:reactivestreams:1.0.0&quot;
-</code></pre><p>##用法示例</p>
-
-          
+          <p>#Architecture Component</p>
+<p>##一、简介<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/11/09/ArchitectureBlog/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
