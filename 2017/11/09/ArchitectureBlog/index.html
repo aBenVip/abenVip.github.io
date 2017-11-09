@@ -69,18 +69,18 @@
 
 
 
-<meta name="description" content="#Architecture Component ##一、简介">
+<meta name="description" content="Architecture Component一、简介">
 <meta name="keywords" content="LiveData	ViewModel Lifecycles MVVM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Google全家桶Architecture Component,实现MVVM">
 <meta property="og:url" content="http://yoursite.com/2017/11/09/ArchitectureBlog/index.html">
 <meta property="og:site_name" content="aBenVip">
-<meta property="og:description" content="#Architecture Component ##一、简介">
+<meta property="og:description" content="Architecture Component一、简介">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-11-09T06:10:57.719Z">
+<meta property="og:updated_time" content="2017-11-09T06:13:03.207Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Google全家桶Architecture Component,实现MVVM">
-<meta name="twitter:description" content="#Architecture Component ##一、简介">
+<meta name="twitter:description" content="Architecture Component一、简介">
 
 
 
@@ -300,13 +300,16 @@
       
 
       
-        <p>#Architecture Component</p>
-<p>##一、简介<br><a id="more"></a></p>
-<p>##二、添加Component到你的Project</p>
-<p>###1、在Project目录下build.gradle中进行以下配置<br>    allprojects {<br>        repositories {<br>            jcenter()<br>            //AS3.0以后，用google()代替”maven { url ‘<a href="https://maven.google.com" target="_blank" rel="external">https://maven.google.com</a>‘ }”<br>            google()<br>            //maven { url ‘<a href="https://maven.google.com" target="_blank" rel="external">https://maven.google.com</a>‘ }<br>         }<br>     }</p>
-<p>###2、在app目录下build.gradle中进行以下配置</p>
-<p>####①：Lifecycles生命周期管理配置</p>
-<p>（默认依赖方式为implementation，如使用Gradle3.3环境下，自行更改为compile）</p>
+        <h1 id="Architecture-Component"><a href="#Architecture-Component" class="headerlink" title="Architecture Component"></a>Architecture Component</h1><h2 id="一、简介"><a href="#一、简介" class="headerlink" title="一、简介"></a>一、简介</h2><a id="more"></a>
+<h2 id="二、添加Component到你的Project"><a href="#二、添加Component到你的Project" class="headerlink" title="二、添加Component到你的Project"></a>二、添加Component到你的Project</h2><h3 id="1、在Project目录下build-gradle中进行以下配置"><a href="#1、在Project目录下build-gradle中进行以下配置" class="headerlink" title="1、在Project目录下build.gradle中进行以下配置"></a>1、在Project目录下build.gradle中进行以下配置</h3><pre><code>allprojects {
+    repositories {
+        jcenter()
+        //AS3.0以后，用google()代替&quot;maven { url &apos;https://maven.google.com&apos; }&quot;
+        google()
+        //maven { url &apos;https://maven.google.com&apos; }
+     }
+ }
+</code></pre><h3 id="2、在app目录下build-gradle中进行以下配置"><a href="#2、在app目录下build-gradle中进行以下配置" class="headerlink" title="2、在app目录下build.gradle中进行以下配置"></a>2、在app目录下build.gradle中进行以下配置</h3><h4 id="①：Lifecycles生命周期管理配置"><a href="#①：Lifecycles生命周期管理配置" class="headerlink" title="①：Lifecycles生命周期管理配置"></a>①：Lifecycles生命周期管理配置</h4><p>（默认依赖方式为implementation，如使用Gradle3.3环境下，自行更改为compile）</p>
 <pre><code>//当添加lifecycle:extensions或者lifecycle:common-java8时，会默认添加该依赖，无需重复添加
 implementation &quot;android.arch.lifecycle:runtime:1.0.3&quot;
 
@@ -315,8 +318,7 @@ annotationProcessor &quot;android.arch.lifecycle:compiler:1.0.0&quot;
 
 //当使用Lifecycles支持Java8语言，需添加该依赖
 implementation &quot;android.arch.lifecycle:common-java8:1.0.0&quot;
-</code></pre><p>####②：LiveData和ViewModel配置</p>
-<pre><code>//默认添加
+</code></pre><h4 id="②：LiveData和ViewModel配置"><a href="#②：LiveData和ViewModel配置" class="headerlink" title="②：LiveData和ViewModel配置"></a>②：LiveData和ViewModel配置</h4><pre><code>//默认添加
 implementation &quot;android.arch.lifecycle:extensions:1.0.0&quot;
 
 //支持在test工程中使用LiveData
@@ -325,8 +327,7 @@ testImplementation &quot;android.arch.core:core-testing:1.0.0&quot;
 //当使用ReactiveStreams的相关Api需添加该依赖，默认添加lifecycle:extensions
 //采用RxJava中的Publisher和Subscriber进行观察和订阅，提供Publisher和LiveData的互相转化
 implementation &quot;android.arch.lifecycle:reactivestreams:1.0.0&quot;
-</code></pre><p>##用法示例</p>
-
+</code></pre><h2 id="用法示例"><a href="#用法示例" class="headerlink" title="用法示例"></a>用法示例</h2>
       
     </div>
     
@@ -416,8 +417,17 @@ implementation &quot;android.arch.lifecycle:reactivestreams:1.0.0&quot;
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           
             <p class="site-author-name" itemprop="name">aBen</p>
@@ -469,6 +479,22 @@ implementation &quot;android.arch.lifecycle:reactivestreams:1.0.0&quot;
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Architecture-Component"><span class="nav-number">1.</span> <span class="nav-text">Architecture Component</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#一、简介"><span class="nav-number">1.1.</span> <span class="nav-text">一、简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#二、添加Component到你的Project"><span class="nav-number">1.2.</span> <span class="nav-text">二、添加Component到你的Project</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、在Project目录下build-gradle中进行以下配置"><span class="nav-number">1.2.1.</span> <span class="nav-text">1、在Project目录下build.gradle中进行以下配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、在app目录下build-gradle中进行以下配置"><span class="nav-number">1.2.2.</span> <span class="nav-text">2、在app目录下build.gradle中进行以下配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#①：Lifecycles生命周期管理配置"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">①：Lifecycles生命周期管理配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#②：LiveData和ViewModel配置"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">②：LiveData和ViewModel配置</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#用法示例"><span class="nav-number">1.3.</span> <span class="nav-text">用法示例</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
